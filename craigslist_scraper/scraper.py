@@ -7,11 +7,17 @@ class CLScrape(object):
     def __init__(self, soup):
         """ Initialize and scrape """
         self.soup = soup
-        self.get_title()
-        self.get_attrs()
-        self.get_time()
-        self.get_conent()
-        self.get_image()
+        self.title = ""
+        self.attrs = {}
+        self.time = {}
+        self.message = ""
+        self.images = []
+
+        for func in [ self.get_title, self.get_attrs, self.get_time, self.get_conent, self.get_image ]:
+            try:
+                func()
+            except Exception as e:
+                print e
     
 
     def parse_attr(self, attr):
@@ -36,18 +42,12 @@ class CLScrape(object):
 
     def get_time(self):
         self.time = {"posted":"", "updated":""}
-        select = ".postinginfo.reveal";
-        k = 0
+        select = ".postinginfo";
         for op_time in self.soup.select(select):
-            k += 1
-            if k == 1:
-                continue
-            elif k == 2:
+            if op_time.find(text=True).find("posted:") != -1:
                 self.time['posted'] = op_time.time['datetime']
-                pass
-            elif k == 3:
+            elif op_time.find(text=True).find("updated:") != -1: 
                 self.time['updated'] = op_time.time['datetime']
-                pass
 
     def get_attrs(self):
         """get attributes 
@@ -94,11 +94,10 @@ class CLScrape(object):
         thumbs = userbody[0].select("#thumbs")
         if not thumbs:
             # single image
-            picture = userbody[0].figure.findAll("img")
-            print picture[0]['src']
+            self.images.append(userbody[0].figure.findAll("img"))
             return 
         for thumb in thumbs[0].select(".thumb"):
-            print thumb['href']
+            self.images.append(thumb['href'])
 
 
 

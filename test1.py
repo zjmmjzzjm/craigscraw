@@ -1,5 +1,14 @@
 from craigslist_scraper.scraper import scrape_url,scrape_html
 #data = scrape_url('http://kootenays.craigslist.ca/mcy/5607706729.html')
+def testUrl(url):
+    data = scrape_url(url)
+    print  "title: ", data.title
+    print "attrs: " ,data.attrs
+    print "time: " ,data.time
+    print "message: ", data.message
+    print "images: ", data.images
+    print "email" , data.email
+
 def test(html):
     data = scrape_html(open(html).read())
     print  "title: ", data.title
@@ -8,6 +17,18 @@ def test(html):
     print "message: ", data.message
     print "images: ", data.images
 
-for i in ['testAll.html', 'test2.html','5654187283.html' ]:
-    print '===================>' , i
-    test(i)
+#for i in ['testAll.html', 'test2.html','5654187283.html' ]:
+#    print '===================>' , i
+#    test(i)
+#
+urls = [
+	'https://billings.craigslist.org/m4w/5654974393.html',
+	'https://billings.craigslist.org/m4w/5611213079.html',
+	'https://billings.craigslist.org/m4w/5636966035.html',
+	'https://billings.craigslist.org/m4w/5616719406.html',
+	'https://billings.craigslist.org/m4w/5653321953.html',
+	]
+
+for i in urls:
+	print '==========> ' + i
+	testUrl(i)

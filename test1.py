@@ -22,11 +22,7 @@ def test(html):
 #    test(i)
 #
 urls = [
-	'https://billings.craigslist.org/m4w/5654974393.html',
-	'https://billings.craigslist.org/m4w/5611213079.html',
-	'https://billings.craigslist.org/m4w/5636966035.html',
-	'https://billings.craigslist.org/m4w/5616719406.html',
-	'https://billings.craigslist.org/m4w/5653321953.html',
+	"http://shenzhen.craigslist.com.cn/cas/5665237744.html"
 	]
 
 for i in urls:

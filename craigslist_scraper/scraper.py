@@ -1,17 +1,18 @@
 """ Library entry point """
 import re, requests
 from bs4 import BeautifulSoup
+import time
 from urlparse import urlparse
 
 _headers = {'Connection': "keep-alive",
-		'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-		'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.132 Safari/537.36',
-		'Referer': "",
-		'Host':"",
-		'Accept-Encoding': 'gzip, deflate, sdch',
-		'Accept-Language': 'en-US,en;q=0.8,zh;q=0.6',
-		'Upgrade-Insecure-Requests':'1',
-		}
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.132 Safari/537.36',
+        'Referer': "",
+        'Host':"",
+        'Accept-Encoding': 'gzip, deflate, sdch',
+        'Accept-Language': 'en-US,en;q=0.8,zh;q=0.6',
+        'Upgrade-Insecure-Requests':'1',
+        }
 
 _cookie = None
 proxies =  {'http':'http://127.0.0.1:1080', 'https':'http://127.0.0.1:1080'}
@@ -20,10 +21,10 @@ class CLScrape(object):
     """ Scraper object to hold data """
     def __init__(self, soup, url):
         """ Initialize and scrape """
-	urlpiece =  urlparse(url)
-	self.baseurl = urlpiece.scheme + "://" + urlpiece.hostname
-	self.host = urlpiece.hostname
-	self.url = url
+        urlpiece =  urlparse(url)
+        self.baseurl = urlpiece.scheme + "://" + urlpiece.hostname
+        self.host = urlpiece.hostname
+        self.url = url
         self.soup = soup
         self.title = ""
         self.attrs = {}
@@ -39,8 +40,8 @@ class CLScrape(object):
     
     def parse_attr(self, attr):
         """ Parse a single attribute from the BeautifulSoup tag """
-        name = self.get_text(attr).strip(' :')
-        value = attr.b.text.strip()
+        name = self.get_text(attr).strip(' :').encode("utf8")
+        value = attr.b.text.strip().encode("utf8")
         self.attrs[name] = value
 
 
@@ -114,7 +115,7 @@ class CLScrape(object):
             self.images.append(userbody[0].figure.findAll("img"))
             return 
         for thumb in thumbs[0].select(".thumb"):
-            self.images.append(thumb['href'])
+            self.images.append(thumb['href'].encode('utf8'))
 
 
 
@@ -125,14 +126,15 @@ class CLScrape(object):
         :returns: TODO
 
         """
+    
+        time.sleep(5)
+        replylink = self.baseurl + self.soup.select('#replylink')[0]['href']
+        #html = requests.get(replylink, headers = _headers, cookies=_cookie,  proxies = proxies).text
+        html = requests.get(replylink, headers = _headers, cookies=_cookie).text
+        esoup = BeautifulSoup(html, "html.parser")
+        self.email = "None"
+        self.email = esoup.select('.anonemail')[0].find(text=True)
 
-	
-	replylink = self.baseurl + self.soup.select('#replylink')[0]['href']
-	html = requests.get(replylink, headers = _headers, cookies=_cookie,  proxies = proxies).text
-	esoup = BeautifulSoup(html, "html.parser")
-
-	self.email = esoup.select('.anonemail')[0].find(text=True)
-        pass
     def get_phone_number(self):
         """get phone number of the poster
         :returns: TODO
@@ -146,6 +148,42 @@ class CLScrape(object):
         except:
             self.price = 'Unlisted'
         pass
+
+def get_post_list(url):
+    urlpiece =  urlparse(url)
+    baseurl = urlpiece.scheme + "://" + urlpiece.hostname
+    host = urlpiece.hostname
+    global _headers
+    global _cookie
+    _headers['Referer']  = baseurl;
+    _headers['Host'] = host
+    req = requests.get(url, headers = _headers, proxies = proxies)
+    html = req.text
+
+    soup = BeautifulSoup(html, "html.parser")
+    totalcount = 0 
+    totalcount_dom = soup.select('.totalcount')
+    if totalcount_dom:
+       totalcount = int(totalcount_dom[0].find(text=True))
+
+    max_page = int(totalcount / 100)
+    res = []
+    for i  in range(0,max_page + 1):
+        target_url  = url + "?s="+str(i*100)  
+        print target_url
+        if i == 0:
+            target_url = url
+        else:
+            req = requests.get(target_url, headers = _headers, proxies = proxies)
+            html = req.text
+            soup = BeautifulSoup(html, "html.parser")
+        
+        for hdr in soup.select('.hdrlnk'):
+            info = hdr['href'].encode("utf8")
+            if info.startswith("//"):
+                continue
+            res.append(baseurl +  info)
+    return res
 
 def scrape_html(html):
     """ Return meta information about a video """
@@ -162,8 +200,8 @@ def scrape_url(url):
     _headers['Referer']  = baseurl;
     _headers['Host'] = host
 #    req0 = requests.get(baseurl, headers = _headers)
-#
-    req = requests.get(url, headers = _headers, proxies = proxies)
+    #req = requests.get(url, headers = _headers, proxies = proxies)
+    req = requests.get(url, headers = _headers)
     _cookie = req.cookies
     html = req.text
 
